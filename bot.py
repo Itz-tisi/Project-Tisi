@@ -1,8 +1,9 @@
+import os
+import asyncio
+from flask import Flask
+from threading import Thread
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes
-
-import os
-from flask import Flask
 
 BOT_TOKEN = os.getenv("BOT_TOKEN", "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo")
 
@@ -19,7 +20,10 @@ flask_app = Flask(__name__)
 def home():
     return "Bot is running!"
 
+def run_bot():
+    asyncio.set_event_loop(asyncio.new_event_loop())  # Fix for async loop issue
+    app.run_polling()
+
 if __name__ == "__main__":
-    from threading import Thread
-    Thread(target=app.run_polling).start()
+    Thread(target=run_bot).start()
     flask_app.run(host="0.0.0.0", port=10000)
