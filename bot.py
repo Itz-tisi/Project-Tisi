@@ -27,3 +27,9 @@ def run_bot():
 if __name__ == "__main__":
     Thread(target=run_bot).start()
     flask_app.run(host="0.0.0.0", port=10000)
+import asyncio
+
+def run_bot():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    app.run_polling()
