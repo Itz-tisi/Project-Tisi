@@ -1,6 +1,5 @@
-from telegram import Update
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
-from telegram.ext import CallbackContext
+from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, CallbackContext
 from flask import Flask, request
 import logging
 import os
@@ -88,6 +87,23 @@ def level_range_buttons():
         [InlineKeyboardButton("70-80", callback_data="level_70_80")],
         [InlineKeyboardButton("80-90", callback_data="level_80_90")]
     ])
+
+# Level Range Selection (The missing function now defined)
+async def select_level_range(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    chat_id = query.message.chat_id
+    selected_level = query.data.split("_")[1]  # Extract the level range from callback data
+
+    player_data[chat_id]["team_level"] = selected_level  # Store the selected level in the player data
+    await query.edit_message_text(
+        "What is the purpose of your team?",
+        reply_markup=InlineKeyboardMarkup([
+            [InlineKeyboardButton("Rank Pushing", callback_data="purpose_rank")],
+            [InlineKeyboardButton("Fun Gameplay", callback_data="purpose_fun")],
+            [InlineKeyboardButton("Ultimate Royale", callback_data="purpose_ultimate")]
+        ])
+    )
 
 # Flask route to receive webhook updates
 @app.route(f'/{TOKEN}', methods=['POST'])
