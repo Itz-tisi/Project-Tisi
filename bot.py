@@ -167,4 +167,5 @@ async def main():
 
 # Run the application
 if __name__ == "__main__":
-    main()  # Just call the main function here
+    import asyncio
+    asyncio.run(main())  # Proper way to run async functions
