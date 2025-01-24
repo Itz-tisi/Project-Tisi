@@ -1,19 +1,19 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 
 # Dictionary to store player details
 player_data = {}
 team_data = []
 
 # Start Command
-def start(update: Update, context: CallbackContext):
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     if chat_id in player_data and player_data[chat_id].get("registered"):
-        update.message.reply_text("You are already registered! Use /menu to continue.")
+        await update.message.reply_text("You are already registered! Use /menu to continue.")
         return
 
     player_data[chat_id] = {"registered": False, "step": "start"}
-    update.message.reply_text(
+    await update.message.reply_text(
         "Welcome to BGMI Team Finder Bot!\nPlease register to get started.",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Register", callback_data="register")]
@@ -21,22 +21,22 @@ def start(update: Update, context: CallbackContext):
     )
 
 # Registration Process
-def registration(update: Update, context: CallbackContext):
+async def registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     chat_id = query.message.chat_id
 
     player_data[chat_id]["registered"] = True
     player_data[chat_id]["step"] = "complete"
-    query.edit_message_text(
+    await query.edit_message_text(
         "Registration complete! Use /menu to access options."
     )
 
 # Main Menu
-def main_menu(update: Update, context: CallbackContext):
+async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
-    query.edit_message_text(
+    await query.answer()
+    await query.edit_message_text(
         "Main Menu:\nChoose an option:",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Create New Team", callback_data="create_team")],
@@ -47,16 +47,16 @@ def main_menu(update: Update, context: CallbackContext):
     )
 
 # Create Team
-def create_team(update: Update, context: CallbackContext):
+async def create_team(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     chat_id = query.message.chat_id
 
     if chat_id not in player_data or not player_data[chat_id].get("registered"):
-        query.edit_message_text("Please register first using /start.")
+        await query.edit_message_text("Please register first using /start.")
         return
 
-    query.edit_message_text(
+    await query.edit_message_text(
         "Select the Level Range for your Team (e.g., 30-40):",
         reply_markup=level_range_buttons()
     )
@@ -74,14 +74,14 @@ def level_range_buttons():
     ])
 
 # Level Range Selection
-def select_level_range(update: Update, context: CallbackContext):
+async def select_level_range(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     chat_id = query.message.chat_id
     selected_level = query.data.split("_")[1]
 
     player_data[chat_id]["team_level"] = selected_level
-    query.edit_message_text(
+    await query.edit_message_text(
         "What is the purpose of your team?",
         reply_markup=InlineKeyboardMarkup([
             [InlineKeyboardButton("Rank Pushing", callback_data="purpose_rank")],
@@ -91,19 +91,19 @@ def select_level_range(update: Update, context: CallbackContext):
     )
 
 # Team Purpose Selection
-def select_team_purpose(update: Update, context: CallbackContext):
+async def select_team_purpose(update: Update, context: ContextTypes.DEFAULT_TYPE):
     query = update.callback_query
-    query.answer()
+    await query.answer()
     chat_id = query.message.chat_id
     selected_purpose = query.data.split("_")[1]
 
     player_data[chat_id]["team_purpose"] = selected_purpose
-    query.edit_message_text(
+    await query.edit_message_text(
         "Your team is almost ready! Please send your team code to complete the process."
     )
 
 # Submit Team Code
-def submit_team_code(update: Update, context: CallbackContext):
+async def submit_team_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
     message = update.message.text
 
@@ -116,16 +116,16 @@ def submit_team_code(update: Update, context: CallbackContext):
             "code": message,
             "language": player_data[chat_id].get("language", "Any"),
         })
-        update.message.reply_text(
+        await update.message.reply_text(
             f"Your team has been created successfully!\nTeam Code: {message}\n"
             "The bot will now find eligible players and share the team code."
         )
-        share_team_code_with_players(chat_id)
+        await share_team_code_with_players(context, chat_id)
     else:
-        update.message.reply_text("You are not creating a team currently. Use the menu to start.")
+        await update.message.reply_text("You are not creating a team currently. Use the menu to start.")
 
 # Share Team Code with Players
-def share_team_code_with_players(creator_id):
+async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creator_id):
     team = next((t for t in team_data if t["creator_id"] == creator_id), None)
     if not team:
         return
@@ -138,7 +138,7 @@ def share_team_code_with_players(creator_id):
             details.get("language", "Any") == team["language"]
             and details.get("level_range") == team["level_range"]
         ):
-            context.bot.send_message(
+            await context.bot.send_message(
                 chat_id=player_id,
                 text=(
                     f"Team Code Found for You!\n"
@@ -150,21 +150,20 @@ def share_team_code_with_players(creator_id):
             )
 
 # Main Function
-def main():
-    TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Replace with your bot token
-    updater = Updater(TOKEN)
-    dispatcher = updater.dispatcher
+async def main():
+    TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Bot token filled here
+    application = Application.builder().token(TOKEN).build()
 
-    dispatcher.add_handler(CommandHandler("start", start))
-    dispatcher.add_handler(CallbackQueryHandler(registration, pattern="^register$"))
-    dispatcher.add_handler(CallbackQueryHandler(main_menu, pattern="^menu$"))
-    dispatcher.add_handler(CallbackQueryHandler(create_team, pattern="^create_team$"))
-    dispatcher.add_handler(CallbackQueryHandler(select_level_range, pattern="^level_"))
-    dispatcher.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, submit_team_code))
+    application.add_handler(CommandHandler("start", start))
+    application.add_handler(CallbackQueryHandler(registration, pattern="^register$"))
+    application.add_handler(CallbackQueryHandler(main_menu, pattern="^menu$"))
+    application.add_handler(CallbackQueryHandler(create_team, pattern="^create_team$"))
+    application.add_handler(CallbackQueryHandler(select_level_range, pattern="^level_"))
+    application.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submit_team_code))
 
-    updater.start_polling()
-    updater.idle()
+    await application.run_polling()
 
 if __name__ == "__main__":
-    main()
+    import asyncio
+    asyncio.run(main())
