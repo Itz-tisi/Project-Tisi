@@ -166,17 +166,17 @@ async def main():
     await application.run_polling()
 
 # Run the application
+import asyncio
+from telegram.ext import Application
+
+async def main():
+    application = Application.builder().token("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo").build()
+
+    # Your bot handlers go here
+
+    await application.run_polling()
+
 if __name__ == "__main__":
-    import asyncio
-
-    try:
-        # Check if an event loop is already running
-        loop = asyncio.get_running_loop()
-        loop.create_task(main())  # Run main() as a background task
-        loop.run_forever()  # Keep the loop running
-    except RuntimeError:
-        # No event loop is running, create a new one
-        asyncio.run(main())  # Run main() properly
-
+    asyncio.run(main())
     
 
