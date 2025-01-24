@@ -117,6 +117,22 @@ async def select_team_purpose(update: Update, context: CallbackContext):
         "Team setup is complete! You can now share your team code or request players to join."
     )
 
+# Submit Team Code
+async def submit_team_code(update: Update, context: CallbackContext):
+    chat_id = update.effective_chat.id
+    team_code = update.message.text.strip()  # Get the team code submitted by the user
+
+    if chat_id not in player_data or not player_data[chat_id].get("creating_team"):
+        await update.message.reply_text("You're not currently creating a team. Use /menu to start.")
+        return
+
+    # Store the team code in player data
+    player_data[chat_id]["team_code"] = team_code
+
+    await update.message.reply_text(
+        f"Team code {team_code} successfully saved! You can now share this code with others or start requesting players to join."
+    )
+
 # Flask route to receive webhook updates
 @app.route(f'/{TOKEN}', methods=['POST'])
 def webhook():
