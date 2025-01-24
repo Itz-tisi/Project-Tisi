@@ -162,10 +162,9 @@ async def main():
     application.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submit_team_code))
 
-    # Running the application directly without asyncio.run
+    # Directly run polling here without using asyncio.run or create_task
     await application.run_polling()
 
-# Start polling without asyncio.run (Render handles the event loop)
+# Run the application
 if __name__ == "__main__":
-    import asyncio
-    asyncio.create_task(main())
+    main()  # Just call the main function here
