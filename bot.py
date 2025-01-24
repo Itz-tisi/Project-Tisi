@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
 
 # Dictionary to store player details
 player_data = {}
@@ -120,12 +120,12 @@ async def submit_team_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Your team has been created successfully!\nTeam Code: {message}\n"
             "The bot will now find eligible players and share the team code."
         )
-        await share_team_code_with_players(chat_id, context)
+        await share_team_code_with_players(context, chat_id)
     else:
         await update.message.reply_text("You are not creating a team currently. Use the menu to start.")
 
 # Share Team Code with Players
-async def share_team_code_with_players(creator_id, context):
+async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creator_id):
     team = next((t for t in team_data if t["creator_id"] == creator_id), None)
     if not team:
         return
