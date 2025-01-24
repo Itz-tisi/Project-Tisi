@@ -150,7 +150,7 @@ async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creat
             )
 
 # Main Function
-async def main():
+def main():
     TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Replace with your bot token
     application = Application.builder().token(TOKEN).build()
 
@@ -162,24 +162,8 @@ async def main():
     application.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submit_team_code))
 
-    # Directly run polling here without using asyncio.run or create_task
-    await application.run_polling()
-
-# Run the application
-import asyncio
-from telegram.ext import Application
-
-async def main():
-    application = Application.builder().token("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo").build()
-
-    # Your handlers go here, like:
-    # application.add_handler(CommandHandler("start", start))
-
-    # Run the bot's polling process asynchronously
-    await application.run_polling()
+    # Directly run polling here
+    application.run_polling()
 
 if __name__ == "__main__":
-    # Use asyncio.run() to manage the event loop
-    asyncio.run(main())
-    
-
+    main()
