@@ -168,4 +168,15 @@ async def main():
 # Run the application
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())  # Proper way to run async functions
+
+    try:
+        loop = asyncio.get_running_loop()
+    except RuntimeError:
+        loop = None
+
+    if loop and loop.is_running():
+        print("Event loop already running. Using create_task().")
+        asyncio.create_task(main())  # ✅ This avoids the error
+    else:
+        print("Starting bot with asyncio.run()")
+        asyncio.run(main())  # ✅ Only runs if no loop is active
