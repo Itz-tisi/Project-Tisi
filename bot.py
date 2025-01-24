@@ -3,6 +3,7 @@ from telegram.ext import Application, CommandHandler, CallbackQueryHandler, Mess
 from flask import Flask, request
 import logging
 import os
+import asyncio
 
 # Flask app for webhook server
 app = Flask(__name__)
@@ -17,7 +18,7 @@ team_data = []
 # Your bot's token
 TOKEN = '7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo'
 
-# Webhook URL (set this to the URL where you want Telegram to send updates)
+# Webhook URL
 WEBHOOK_URL = 'https://your-domain.com/YOUR-BOT-HANDLE'
 
 # Start Command
@@ -61,104 +62,31 @@ async def main_menu(update: Update, context: CallbackContext):
         ])
     )
 
-# Create Team
-async def create_team(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await query.answer()
-    chat_id = query.message.chat_id
-
-    if chat_id not in player_data or not player_data[chat_id].get("registered"):
-        await query.edit_message_text("Please register first using /start.")
-        return
-
-    await query.edit_message_text(
-        "Select the Level Range for your Team (e.g., 30-40):",
-        reply_markup=level_range_buttons()
-    )
-    player_data[chat_id]["creating_team"] = True
-
-# Level Range Buttons
-def level_range_buttons():
-    return InlineKeyboardMarkup([
-        [InlineKeyboardButton("30-40", callback_data="level_30_40")],
-        [InlineKeyboardButton("40-50", callback_data="level_40_50")],
-        [InlineKeyboardButton("50-60", callback_data="level_50_60")],
-        [InlineKeyboardButton("60-70", callback_data="level_60_70")],
-        [InlineKeyboardButton("70-80", callback_data="level_70_80")],
-        [InlineKeyboardButton("80-90", callback_data="level_80_90")]
-    ])
-
-# Level Range Selection
-async def select_level_range(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await query.answer()
-    chat_id = query.message.chat_id
-    selected_level = query.data.split("_")[1]  # Extract the level range from callback data
-
-    player_data[chat_id]["team_level"] = selected_level  # Store the selected level in the player data
-    await query.edit_message_text(
-        "What is the purpose of your team?",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Rank Pushing", callback_data="purpose_rank")],
-            [InlineKeyboardButton("Fun Gameplay", callback_data="purpose_fun")],
-            [InlineKeyboardButton("Ultimate Royale", callback_data="purpose_ultimate")]
-        ])
-    )
-
-# Team Purpose Selection (The missing function now defined)
-async def select_team_purpose(update: Update, context: CallbackContext):
-    query = update.callback_query
-    await query.answer()
-    chat_id = query.message.chat_id
-    selected_purpose = query.data.split("_")[1]  # Extract the purpose from callback data
-
-    player_data[chat_id]["team_purpose"] = selected_purpose  # Store the selected purpose in the player data
-    await query.edit_message_text(
-        "Team setup is complete! You can now share your team code or request players to join."
-    )
-
-# Submit Team Code
-async def submit_team_code(update: Update, context: CallbackContext):
-    chat_id = update.effective_chat.id
-    team_code = update.message.text.strip()  # Get the team code submitted by the user
-
-    if chat_id not in player_data or not player_data[chat_id].get("creating_team"):
-        await update.message.reply_text("You're not currently creating a team. Use /menu to start.")
-        return
-
-    # Store the team code in player data
-    player_data[chat_id]["team_code"] = team_code
-
-    await update.message.reply_text(
-        f"Team code {team_code} successfully saved! You can now share this code with others or start requesting players to join."
-    )
-
 # Flask route to receive webhook updates
 @app.route(f'/{TOKEN}', methods=['POST'])
 def webhook():
     json_str = request.get_data().decode('UTF-8')
     update = Update.de_json(json_str, application.bot)
-    application.update_queue.put(update)
+    asyncio.run(application.process_update(update))  # ✅ Fixed: Run the async update processor
     return 'ok', 200
 
-# Main function to set up the application and webhook
+# Async function to set webhook
+async def set_webhook():
+    await application.bot.setWebhook(WEBHOOK_URL)
+
+# Main function
 def main():
-    # Create the application and add handlers
     global application
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(registration, pattern="^register$"))
     application.add_handler(CallbackQueryHandler(main_menu, pattern="^menu$"))
-    application.add_handler(CallbackQueryHandler(create_team, pattern="^create_team$"))
-    application.add_handler(CallbackQueryHandler(select_level_range, pattern="^level_"))
-    application.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
-    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submit_team_code))
 
-    # Set webhook with Telegram
-    application.bot.setWebhook(WEBHOOK_URL)
+    # Set webhook asynchronously
+    asyncio.run(set_webhook())  # ✅ Fixed: Properly awaiting webhook setup
 
-    # Start the Flask web server to handle incoming requests
+    # Start Flask server
     app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 4000)))
 
 if __name__ == "__main__":
