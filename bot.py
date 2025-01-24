@@ -1,5 +1,5 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters, ContextTypes
 
 # Dictionary to store player details
 player_data = {}
@@ -120,12 +120,12 @@ async def submit_team_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
             f"Your team has been created successfully!\nTeam Code: {message}\n"
             "The bot will now find eligible players and share the team code."
         )
-        await share_team_code_with_players(context, chat_id)
+        await share_team_code_with_players(chat_id, context)
     else:
         await update.message.reply_text("You are not creating a team currently. Use the menu to start.")
 
 # Share Team Code with Players
-async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creator_id):
+async def share_team_code_with_players(creator_id, context):
     team = next((t for t in team_data if t["creator_id"] == creator_id), None)
     if not team:
         return
@@ -151,7 +151,7 @@ async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creat
 
 # Main Function
 async def main():
-    TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Bot token filled here
+    TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Replace with your bot token
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
