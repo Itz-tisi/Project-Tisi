@@ -151,7 +151,7 @@ async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creat
 
 # Main Function
 async def main():
-    TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Replace with your bot token
+    TOKEN = "YOUR_BOT_TOKEN"  # Replace with your bot token
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
@@ -162,8 +162,9 @@ async def main():
     application.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submit_team_code))
 
+    # Running the application directly without asyncio.run
     await application.run_polling()
 
 if __name__ == "__main__":
     import asyncio
-    asyncio.run(main())
+    asyncio.run(main())  # Ensure we only run the main function asynchronously
