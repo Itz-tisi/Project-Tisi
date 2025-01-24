@@ -170,12 +170,13 @@ if __name__ == "__main__":
     import asyncio
 
     try:
+        # Check if an event loop is already running
         loop = asyncio.get_running_loop()
+        loop.create_task(main())  # Run main() as a background task
+        loop.run_forever()  # Keep the loop running
     except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-
-    loop.run_until_complete(main())  # Run the bot safely
+        # No event loop is running, create a new one
+        asyncio.run(main())  # Run main() properly
 
     
 
