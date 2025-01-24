@@ -19,7 +19,7 @@ team_data = []
 TOKEN = '7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo'
 
 # Webhook URL
-WEBHOOK_URL = 'https://your-domain.com/YOUR-BOT-HANDLE'
+WEBHOOK_URL = 'https://project-tisi.onrender.com/webhook'
 
 # Start Command
 async def start(update: Update, context: CallbackContext):
