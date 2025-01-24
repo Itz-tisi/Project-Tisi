@@ -105,24 +105,27 @@ async def select_team_purpose(update: Update, context: ContextTypes.DEFAULT_TYPE
 # Submit Team Code
 async def submit_team_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
     chat_id = update.effective_chat.id
-    message = update.message.text
+    if update.message:  # Check if update.message is not None
+        message = update.message.text
 
-    if "creating_team" in player_data.get(chat_id, {}) and player_data[chat_id]["creating_team"]:
-        player_data[chat_id]["team_code"] = message
-        team_data.append({
-            "creator_id": chat_id,
-            "level_range": player_data[chat_id]["team_level"],
-            "purpose": player_data[chat_id]["team_purpose"],
-            "code": message,
-            "language": player_data[chat_id].get("language", "Any"),
-        })
-        await update.message.reply_text(
-            f"Your team has been created successfully!\nTeam Code: {message}\n"
-            "The bot will now find eligible players and share the team code."
-        )
-        await share_team_code_with_players(context, chat_id)
+        if "creating_team" in player_data.get(chat_id, {}) and player_data[chat_id]["creating_team"]:
+            player_data[chat_id]["team_code"] = message
+            team_data.append({
+                "creator_id": chat_id,
+                "level_range": player_data[chat_id]["team_level"],
+                "purpose": player_data[chat_id]["team_purpose"],
+                "code": message,
+                "language": player_data[chat_id].get("language", "Any"),
+            })
+            await update.message.reply_text(
+                f"Your team has been created successfully!\nTeam Code: {message}\n"
+                "The bot will now find eligible players and share the team code."
+            )
+            await share_team_code_with_players(context, chat_id)
+        else:
+            await update.message.reply_text("You are not creating a team currently. Use the menu to start.")
     else:
-        await update.message.reply_text("You are not creating a team currently. Use the menu to start.")
+        await update.message.reply_text("No message text found. Please try again.")
 
 # Share Team Code with Players
 async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creator_id):
