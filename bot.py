@@ -169,15 +169,13 @@ async def main():
 if __name__ == "__main__":
     import asyncio
 
-    async def run():
-        await main()
-
     try:
-        asyncio.run(run())
+        loop = asyncio.get_running_loop()
     except RuntimeError:
-        loop = asyncio.get_event_loop()
-        loop.create_task(run())
-        loop.run_forever()
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(main())  # Run the bot safely
 
     
 
