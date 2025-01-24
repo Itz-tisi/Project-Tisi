@@ -88,7 +88,7 @@ def level_range_buttons():
         [InlineKeyboardButton("80-90", callback_data="level_80_90")]
     ])
 
-# Level Range Selection (The missing function now defined)
+# Level Range Selection
 async def select_level_range(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
@@ -103,6 +103,18 @@ async def select_level_range(update: Update, context: CallbackContext):
             [InlineKeyboardButton("Fun Gameplay", callback_data="purpose_fun")],
             [InlineKeyboardButton("Ultimate Royale", callback_data="purpose_ultimate")]
         ])
+    )
+
+# Team Purpose Selection (The missing function now defined)
+async def select_team_purpose(update: Update, context: CallbackContext):
+    query = update.callback_query
+    await query.answer()
+    chat_id = query.message.chat_id
+    selected_purpose = query.data.split("_")[1]  # Extract the purpose from callback data
+
+    player_data[chat_id]["team_purpose"] = selected_purpose  # Store the selected purpose in the player data
+    await query.edit_message_text(
+        "Team setup is complete! You can now share your team code or request players to join."
     )
 
 # Flask route to receive webhook updates
