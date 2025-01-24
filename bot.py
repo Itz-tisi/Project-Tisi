@@ -1,12 +1,28 @@
-from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, ContextTypes, filters
+from telegram import Update
+from telegram.ext import Application, CommandHandler, CallbackQueryHandler, MessageHandler, filters
+from telegram.ext import CallbackContext
+from flask import Flask, request
+import logging
+import os
 
-# Dictionary to store player details
+# Flask app for webhook server
+app = Flask(__name__)
+
+# Logging setup
+logging.basicConfig(level=logging.INFO)
+
+# Dictionary to store player details and team data
 player_data = {}
 team_data = []
 
+# Your bot's token
+TOKEN = '7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo'
+
+# Webhook URL (set this to the URL where you want Telegram to send updates)
+WEBHOOK_URL = 'https://your-domain.com/YOUR-BOT-HANDLE'
+
 # Start Command
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(update: Update, context: CallbackContext):
     chat_id = update.effective_chat.id
     if chat_id in player_data and player_data[chat_id].get("registered"):
         await update.message.reply_text("You are already registered! Use /menu to continue.")
@@ -21,7 +37,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # Registration Process
-async def registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def registration(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     chat_id = query.message.chat_id
@@ -33,7 +49,7 @@ async def registration(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # Main Menu
-async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def main_menu(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     await query.edit_message_text(
@@ -47,7 +63,7 @@ async def main_menu(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 # Create Team
-async def create_team(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def create_team(update: Update, context: CallbackContext):
     query = update.callback_query
     await query.answer()
     chat_id = query.message.chat_id
@@ -73,88 +89,18 @@ def level_range_buttons():
         [InlineKeyboardButton("80-90", callback_data="level_80_90")]
     ])
 
-# Level Range Selection
-async def select_level_range(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    chat_id = query.message.chat_id
-    selected_level = query.data.split("_")[1]
+# Flask route to receive webhook updates
+@app.route(f'/{TOKEN}', methods=['POST'])
+def webhook():
+    json_str = request.get_data().decode('UTF-8')
+    update = Update.de_json(json_str, application.bot)
+    application.update_queue.put(update)
+    return 'ok', 200
 
-    player_data[chat_id]["team_level"] = selected_level
-    await query.edit_message_text(
-        "What is the purpose of your team?",
-        reply_markup=InlineKeyboardMarkup([
-            [InlineKeyboardButton("Rank Pushing", callback_data="purpose_rank")],
-            [InlineKeyboardButton("Fun Gameplay", callback_data="purpose_fun")],
-            [InlineKeyboardButton("Ultimate Royale", callback_data="purpose_ultimate")]
-        ])
-    )
-
-# Team Purpose Selection
-async def select_team_purpose(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    query = update.callback_query
-    await query.answer()
-    chat_id = query.message.chat_id
-    selected_purpose = query.data.split("_")[1]
-
-    player_data[chat_id]["team_purpose"] = selected_purpose
-    await query.edit_message_text(
-        "Your team is almost ready! Please send your team code to complete the process."
-    )
-
-# Submit Team Code
-async def submit_team_code(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    chat_id = update.effective_chat.id
-    if update.message:  # Check if update.message is not None
-        message = update.message.text
-
-        if "creating_team" in player_data.get(chat_id, {}) and player_data[chat_id]["creating_team"]:
-            player_data[chat_id]["team_code"] = message
-            team_data.append({
-                "creator_id": chat_id,
-                "level_range": player_data[chat_id]["team_level"],
-                "purpose": player_data[chat_id]["team_purpose"],
-                "code": message,
-                "language": player_data[chat_id].get("language", "Any"),
-            })
-            await update.message.reply_text(
-                f"Your team has been created successfully!\nTeam Code: {message}\n"
-                "The bot will now find eligible players and share the team code."
-            )
-            await share_team_code_with_players(context, chat_id)
-        else:
-            await update.message.reply_text("You are not creating a team currently. Use the menu to start.")
-    else:
-        await update.message.reply_text("No message text found. Please try again.")
-
-# Share Team Code with Players
-async def share_team_code_with_players(context: ContextTypes.DEFAULT_TYPE, creator_id):
-    team = next((t for t in team_data if t["creator_id"] == creator_id), None)
-    if not team:
-        return
-
-    for player_id, details in player_data.items():
-        if player_id == creator_id or details.get("step") != "complete":
-            continue
-
-        if (
-            details.get("language", "Any") == team["language"]
-            and details.get("level_range") == team["level_range"]
-        ):
-            await context.bot.send_message(
-                chat_id=player_id,
-                text=(
-                    f"Team Code Found for You!\n"
-                    f"Level Range: {team['level_range']}\n"
-                    f"Purpose: {team['purpose']}\n"
-                    f"Team Code: {team['code']}\n\n"
-                    "Click 'Join Team' in the menu to join!"
-                )
-            )
-
-# Main Function
+# Main function to set up the application and webhook
 def main():
-    TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Replace with your bot token
+    # Create the application and add handlers
+    global application
     application = Application.builder().token(TOKEN).build()
 
     application.add_handler(CommandHandler("start", start))
@@ -165,8 +111,11 @@ def main():
     application.add_handler(CallbackQueryHandler(select_team_purpose, pattern="^purpose_"))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, submit_team_code))
 
-    # Directly run polling here
-    application.run_polling()
+    # Set webhook with Telegram
+    application.bot.setWebhook(WEBHOOK_URL)
+
+    # Start the Flask web server to handle incoming requests
+    app.run(host='0.0.0.0', port=int(os.environ.get('PORT', 4000)))
 
 if __name__ == "__main__":
     main()
