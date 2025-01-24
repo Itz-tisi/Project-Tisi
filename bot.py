@@ -172,11 +172,14 @@ from telegram.ext import Application
 async def main():
     application = Application.builder().token("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo").build()
 
-    # Your bot handlers go here
+    # Your handlers go here, like:
+    # application.add_handler(CommandHandler("start", start))
 
+    # Run the bot's polling process asynchronously
     await application.run_polling()
 
 if __name__ == "__main__":
+    # Use asyncio.run() to manage the event loop
     asyncio.run(main())
     
 
