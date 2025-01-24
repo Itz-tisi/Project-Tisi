@@ -18,8 +18,8 @@ team_data = []
 # Your bot's token
 TOKEN = '7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo'
 
-# Webhook URL
-WEBHOOK_URL = 'https://your-domain.com/YOUR-BOT-HANDLE'
+# Webhook URL (Replace with your actual deployed URL)
+WEBHOOK_URL = 'https://<your-app-name>.onrender.com/webhook'  # Replace this
 
 # Start Command
 async def start(update: Update, context: CallbackContext):
@@ -63,7 +63,7 @@ async def main_menu(update: Update, context: CallbackContext):
     )
 
 # Flask route to receive webhook updates
-@app.route(f'/{TOKEN}', methods=['POST'])
+@app.route('/webhook', methods=['POST'])
 def webhook():
     json_str = request.get_data().decode('UTF-8')
     update = Update.de_json(json_str, application.bot)
@@ -79,6 +79,7 @@ def main():
     global application
     application = Application.builder().token(TOKEN).build()
 
+    # Add handlers
     application.add_handler(CommandHandler("start", start))
     application.add_handler(CallbackQueryHandler(registration, pattern="^register$"))
     application.add_handler(CallbackQueryHandler(main_menu, pattern="^menu$"))
