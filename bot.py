@@ -1,30 +1,62 @@
 from telegram import Update, ReplyKeyboardMarkup
 from telegram.ext import Application, CommandHandler, ConversationHandler, MessageHandler, filters, ContextTypes
+import time
 
 # Define states for the conversation
-PLAYER_ID, PLAYER_KD, PLAYER_LEVEL, PLAYER_LANGUAGE, PLAYER_SKILL, PLAYER_TIER = range(6)
+PLAYER_ID, PLAYER_KD, PLAYER_LEVEL, PLAYER_LANGUAGE, PLAYER_SKILL, PLAYER_TIER, CHANGE_SETTINGS = range(7)
+registered_players = {}  # To store registered player data
+cooldown_time = 86400  # 24 hours in seconds
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Start the registration process."""
+    user_id = update.effective_user.id
+
+    if user_id in registered_players:
+        last_change_time = registered_players[user_id].get("last_change_time", 0)
+        time_since_last_change = time.time() - last_change_time
+
+        if time_since_last_change < cooldown_time:
+            remaining_time = int((cooldown_time - time_since_last_change) / 3600)
+            await update.message.reply_text(
+                f"You are already registered. You can change your settings after {remaining_time} hours.",
+            )
+            return ConversationHandler.END
+
+        await update.message.reply_text(
+            "You are already registered. Click 'Change Settings' to update your details.",
+            reply_markup=ReplyKeyboardMarkup([["Change Settings"]], one_time_keyboard=True, resize_keyboard=True),
+        )
+        return CHANGE_SETTINGS
+
     await update.message.reply_text(
-        "Register as a player. Please provide the following details.\n\nEnter your Player ID:",
+        "Register as a player. Please provide the following details.\n\nEnter your Player ID (numbers only):",
     )
     return PLAYER_ID
 
 async def get_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Get the player's ID."""
+    if not update.message.text.isdigit():
+        await update.message.reply_text("Invalid Player ID. Please enter numbers only:")
+        return PLAYER_ID
+
     context.user_data['player_id'] = update.message.text
-    await update.message.reply_text("Enter your KD ratio:")
+
+    # Provide KD ratio options
+    kd_keyboard = [["1-5", "5-10"], ["10-15", "15-20"]]
+    reply_markup = ReplyKeyboardMarkup(kd_keyboard, one_time_keyboard=True, resize_keyboard=True)
+
+    await update.message.reply_text("Select your KD ratio:", reply_markup=reply_markup)
     return PLAYER_KD
 
 async def get_player_kd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Get the player's KD ratio."""
     context.user_data['player_kd'] = update.message.text
-    await update.message.reply_text("Enter your Player Level:")
+
+    # Provide level options
+    level_keyboard = [["40-50", "50-60"], ["60-70", "70-80"], ["80-90"]]
+    reply_markup = ReplyKeyboardMarkup(level_keyboard, one_time_keyboard=True, resize_keyboard=True)
+
+    await update.message.reply_text("Select your Player Level:", reply_markup=reply_markup)
     return PLAYER_LEVEL
 
 async def get_player_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Get the player's level."""
     context.user_data['player_level'] = update.message.text
 
     # Provide language options
@@ -35,7 +67,6 @@ async def get_player_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return PLAYER_LANGUAGE
 
 async def get_player_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Get the player's language."""
     context.user_data['player_language'] = update.message.text
 
     # Provide skill options
@@ -46,7 +77,6 @@ async def get_player_language(update: Update, context: ContextTypes.DEFAULT_TYPE
     return PLAYER_SKILL
 
 async def get_player_skill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Get the player's skill."""
     context.user_data['player_skill'] = update.message.text
 
     # Provide tier options
@@ -57,8 +87,18 @@ async def get_player_skill(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return PLAYER_TIER
 
 async def get_player_tier(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
-    """Get the player's maximum tier."""
     context.user_data['player_tier'] = update.message.text
+
+    user_id = update.effective_user.id
+    registered_players[user_id] = {
+        "player_id": context.user_data['player_id'],
+        "player_kd": context.user_data['player_kd'],
+        "player_level": context.user_data['player_level'],
+        "player_language": context.user_data['player_language'],
+        "player_skill": context.user_data['player_skill'],
+        "player_tier": context.user_data['player_tier'],
+        "last_change_time": time.time()
+    }
 
     # Registration summary
     summary = (
@@ -73,6 +113,18 @@ async def get_player_tier(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     )
     await update.message.reply_text(summary)
 
+    return ConversationHandler.END
+
+async def change_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    user_id = update.effective_user.id
+
+    if user_id not in registered_players:
+        await update.message.reply_text("You are not registered yet. Use /start to register.")
+        return ConversationHandler.END
+
+    registered_players[user_id]["last_change_time"] = time.time()
+
+    await update.message.reply_text("You can now update your details. Please use /start to re-register.")
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -94,6 +146,7 @@ def main() -> None:
             PLAYER_LANGUAGE: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_player_language)],
             PLAYER_SKILL: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_player_skill)],
             PLAYER_TIER: [MessageHandler(filters.TEXT & ~filters.COMMAND, get_player_tier)],
+            CHANGE_SETTINGS: [MessageHandler(filters.TEXT & ~filters.COMMAND, change_settings)],
         },
         fallbacks=[CommandHandler("cancel", cancel)],
     )
