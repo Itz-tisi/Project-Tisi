@@ -4,6 +4,7 @@ from flask import Flask, request
 import logging
 import os
 import asyncio
+import json
 
 # Flask app setup
 app = Flask(__name__)
@@ -114,8 +115,9 @@ def find_matching_team(player_info):
 @app.route("/webhook", methods=["POST"])
 def webhook():
     json_str = request.get_data().decode("UTF-8")
-    update = Update.de_json(json_str, application.bot)
-    asyncio.run(application.process_update(update))
+    data = json.loads(json_str)  # Parse the raw string into a JSON object (dict)
+    update = Update.de_json(data, application.bot)  # Now pass the parsed data to de_json
+    asyncio.run(application.process_update(update))  # Run the update in the event loop
     return "ok", 200
 
 # Set Webhook
@@ -132,25 +134,12 @@ def main():
     application.add_handler(CallbackQueryHandler(button_handler))
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    asyncio.run(set_webhook())
-    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 4000)))
+    asyncio.run(set_webhook())  # Set the webhook after initializing the application
+    app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 4000)))  # Start Flask app
 
 if __name__ == "__main__":
-    main() 
-json_str = request.get_data().decode("UTF-8")
+    main()
 
-json_data = json.loads(json_str)  # Converts the string to a JSON object
-update = Update.de_json(json_data, application.bot)
-
-import json
-
-@app.route("/webhook", methods=["POST"])
-def webhook():
-    json_str = request.get_data().decode("UTF-8")  # Get the raw JSON data from the request
-    data = json.loads(json_str)  # Parse the raw string into a JSON object (dict)
-    update = Update.de_json(data, application.bot)  # Now pass the parsed data to de_json
-    asyncio.run(application.process_update(update))
-    return "ok", 200
 @app.route('/')
 def home():
     return "Bot is live!", 200
