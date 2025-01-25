@@ -8,6 +8,7 @@ registered_players = {}  # To store registered player data
 cooldown_time = 86400  # 24 hours in seconds
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle the /start command to initiate the registration process."""
     user_id = update.effective_user.id
 
     if user_id in registered_players:
@@ -35,6 +36,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     return PLAYER_ID
 
 async def get_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle Player ID input."""
     if not update.message.text.isdigit():
         await update.message.reply_text("**\u274c Invalid Player ID.** Please enter numbers only:", parse_mode="Markdown")
         return PLAYER_ID
@@ -49,6 +51,7 @@ async def get_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return PLAYER_KD
 
 async def get_player_kd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle KD Ratio input."""
     context.user_data['player_kd'] = update.message.text
 
     # Provide level options
@@ -59,6 +62,7 @@ async def get_player_kd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     return PLAYER_LEVEL
 
 async def get_player_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle Player Level input."""
     context.user_data['player_level'] = update.message.text
 
     # Provide language options
@@ -69,6 +73,7 @@ async def get_player_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return PLAYER_LANGUAGE
 
 async def get_player_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle Player Language input."""
     context.user_data['player_language'] = update.message.text
 
     # Provide skill options
@@ -79,6 +84,7 @@ async def get_player_language(update: Update, context: ContextTypes.DEFAULT_TYPE
     return PLAYER_SKILL
 
 async def get_player_skill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle Player Skill input."""
     context.user_data['player_skill'] = update.message.text
 
     # Provide tier options
@@ -89,6 +95,7 @@ async def get_player_skill(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     return PLAYER_TIER
 
 async def get_player_tier(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Handle Player Tier input and complete registration."""
     context.user_data['player_tier'] = update.message.text
 
     user_id = update.effective_user.id
@@ -118,6 +125,7 @@ async def get_player_tier(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     return ConversationHandler.END
 
 async def change_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
+    """Allow the user to update their details."""
     user_id = update.effective_user.id
 
     if user_id not in registered_players:
@@ -136,6 +144,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 # Main function to run the bot
 def main() -> None:
+    """Start the bot and set up the handlers."""
     application = Application.builder().token("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo").build()
 
     # Define the conversation handler
