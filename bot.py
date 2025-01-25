@@ -17,24 +17,27 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         if time_since_last_change < cooldown_time:
             remaining_time = int((cooldown_time - time_since_last_change) / 3600)
             await update.message.reply_text(
-                f"You are already registered. You can change your settings after {remaining_time} hours.",
+                f"**You are already registered.** \nYou can change your settings after {remaining_time} hours.",
+                parse_mode="Markdown"
             )
             return ConversationHandler.END
 
         await update.message.reply_text(
-            "You are already registered. Click 'Change Settings' to update your details.",
+            "**You are already registered.**\nClick *Change Settings* to update your details.",
             reply_markup=ReplyKeyboardMarkup([["Change Settings"]], one_time_keyboard=True, resize_keyboard=True),
+            parse_mode="Markdown"
         )
         return CHANGE_SETTINGS
 
     await update.message.reply_text(
-        "Register as a player. Please provide the following details.\n\nEnter your Player ID (numbers only):",
+        "**Register as a player.**\nUse the following steps to register.\n\nEnter your Player ID (numbers only):",
+        parse_mode="Markdown"
     )
     return PLAYER_ID
 
 async def get_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     if not update.message.text.isdigit():
-        await update.message.reply_text("Invalid Player ID. Please enter numbers only:")
+        await update.message.reply_text("**Invalid Player ID.** Please enter numbers only:", parse_mode="Markdown")
         return PLAYER_ID
 
     context.user_data['player_id'] = update.message.text
@@ -43,7 +46,7 @@ async def get_player_id(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     kd_keyboard = [["1-5", "5-10"], ["10-15", "15-20"]]
     reply_markup = ReplyKeyboardMarkup(kd_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-    await update.message.reply_text("Select your KD ratio:", reply_markup=reply_markup)
+    await update.message.reply_text("**Select your KD ratio:**", reply_markup=reply_markup, parse_mode="Markdown")
     return PLAYER_KD
 
 async def get_player_kd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -53,7 +56,7 @@ async def get_player_kd(update: Update, context: ContextTypes.DEFAULT_TYPE) -> i
     level_keyboard = [["40-50", "50-60"], ["60-70", "70-80"], ["80-90"]]
     reply_markup = ReplyKeyboardMarkup(level_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-    await update.message.reply_text("Select your Player Level:", reply_markup=reply_markup)
+    await update.message.reply_text("**Select your Player Level:**", reply_markup=reply_markup, parse_mode="Markdown")
     return PLAYER_LEVEL
 
 async def get_player_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -63,7 +66,7 @@ async def get_player_level(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     language_keyboard = [["Tamil", "Telugu"], ["Malayalam", "Kannada"], ["Hindi"]]
     reply_markup = ReplyKeyboardMarkup(language_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-    await update.message.reply_text("Select your language:", reply_markup=reply_markup)
+    await update.message.reply_text("**Select your language:**", reply_markup=reply_markup, parse_mode="Markdown")
     return PLAYER_LANGUAGE
 
 async def get_player_language(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -73,7 +76,7 @@ async def get_player_language(update: Update, context: ContextTypes.DEFAULT_TYPE
     skill_keyboard = [["Short Range Player"], ["Long Range Player"], ["Both Short & Long Range"], ["IGL"]]
     reply_markup = ReplyKeyboardMarkup(skill_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-    await update.message.reply_text("Select your skill:", reply_markup=reply_markup)
+    await update.message.reply_text("**Select your skill:**", reply_markup=reply_markup, parse_mode="Markdown")
     return PLAYER_SKILL
 
 async def get_player_skill(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -83,7 +86,7 @@ async def get_player_skill(update: Update, context: ContextTypes.DEFAULT_TYPE) -
     tier_keyboard = [["Diamond", "Crown"], ["Ace", "Ace Dominator"], ["Conqueror"]]
     reply_markup = ReplyKeyboardMarkup(tier_keyboard, one_time_keyboard=True, resize_keyboard=True)
 
-    await update.message.reply_text("Select your maximum tier:", reply_markup=reply_markup)
+    await update.message.reply_text("**Select your maximum tier:**", reply_markup=reply_markup, parse_mode="Markdown")
     return PLAYER_TIER
 
 async def get_player_tier(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
@@ -102,16 +105,16 @@ async def get_player_tier(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
 
     # Registration summary
     summary = (
-        f"Registration Complete! Your details are:\n"
-        f"- Player ID: {context.user_data['player_id']}\n"
-        f"- KD Ratio: {context.user_data['player_kd']}\n"
-        f"- Level: {context.user_data['player_level']}\n"
-        f"- Language: {context.user_data['player_language']}\n"
-        f"- Skill: {context.user_data['player_skill']}\n"
-        f"- Maximum Tier: {context.user_data['player_tier']}\n"
-        f"\nPlayer has been successfully registered!"
+        f"**Registration Complete!** Your details are:\n"
+        f"- **Player ID:** {context.user_data['player_id']}\n"
+        f"- **KD Ratio:** {context.user_data['player_kd']}\n"
+        f"- **Level:** {context.user_data['player_level']}\n"
+        f"- **Language:** {context.user_data['player_language']}\n"
+        f"- **Skill:** {context.user_data['player_skill']}\n"
+        f"- **Maximum Tier:** {context.user_data['player_tier']}\n"
+        f"\n**Player has been successfully registered!**"
     )
-    await update.message.reply_text(summary)
+    await update.message.reply_text(summary, parse_mode="Markdown")
 
     return ConversationHandler.END
 
@@ -119,22 +122,22 @@ async def change_settings(update: Update, context: ContextTypes.DEFAULT_TYPE) ->
     user_id = update.effective_user.id
 
     if user_id not in registered_players:
-        await update.message.reply_text("You are not registered yet. Use /start to register.")
+        await update.message.reply_text("You are not registered yet. Use /start to register.", parse_mode="Markdown")
         return ConversationHandler.END
 
     registered_players[user_id]["last_change_time"] = time.time()
 
-    await update.message.reply_text("You can now update your details. Please use /start to re-register.")
+    await update.message.reply_text("**You can now update your details. Please use /start to re-register.**", parse_mode="Markdown")
     return ConversationHandler.END
 
 async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
     """Cancel the registration process."""
-    await update.message.reply_text("Registration cancelled.")
+    await update.message.reply_text("**Registration cancelled.**", parse_mode="Markdown")
     return ConversationHandler.END
 
 # Main function to run the bot
 def main() -> None:
-    application = Application.builder().token("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo").build()
+    application = Application.builder().token("<YOUR_BOT_TOKEN>").build()
 
     # Define the conversation handler
     conv_handler = ConversationHandler(
