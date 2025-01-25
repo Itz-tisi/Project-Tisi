@@ -15,9 +15,8 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
         time_since_last_change = time.time() - last_change_time
 
         if time_since_last_change < cooldown_time:
-            remaining_time = int((cooldown_time - time_since_last_change) / 3600)
             await update.message.reply_text(
-                f"**\ud83d\udd12 You are already registered.** \nYou can change your settings after {remaining_time} hours.",
+                "**\ud83d\udd12 You are already registered.**",
                 parse_mode="Markdown"
             )
             return ConversationHandler.END
@@ -137,7 +136,7 @@ async def cancel(update: Update, context: ContextTypes.DEFAULT_TYPE) -> int:
 
 # Main function to run the bot
 def main() -> None:
-    application = Application.builder().token("<YOUR_BOT_TOKEN>").build()
+    application = Application.builder().token("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo").build()
 
     # Define the conversation handler
     conv_handler = ConversationHandler(
