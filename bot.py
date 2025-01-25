@@ -1,5 +1,8 @@
 from telegram import Update, InlineKeyboardButton, InlineKeyboardMarkup
-from telegram.ext import Updater, CommandHandler, CallbackQueryHandler, ConversationHandler, MessageHandler, Filters, CallbackContext
+from telegram.ext import (
+    Updater, CommandHandler, CallbackQueryHandler,
+    ConversationHandler, MessageHandler, filters, CallbackContext
+)
 
 # Constants for conversation states
 MENU, LANGUAGE, MIC, TEAM_OPTIONS, REGISTER, SETTINGS = range(6)
