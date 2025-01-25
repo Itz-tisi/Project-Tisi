@@ -103,7 +103,10 @@ def cancel(update: Update, context: CallbackContext) -> int:
 
 def main():
     """Main function to run the bot."""
-    updater = Updater("<YOUR_BOT_TOKEN>")  # Replace with your bot's token
+    updater = Updater("Done! Congratulations on your new bot. You will find it at t.me/Itztisi_bot. You can now add a description, about section and profile picture for your bot, see /help for a list of commands. By the way, when you've finished creating your cool bot, ping our Bot Support if you want a better username for it. Just make sure the bot is fully operational before you do this.
+
+Use this token to access the HTTP API:
+("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo")  # Replace with your bot's token
 
     dispatcher = updater.dispatcher
 
