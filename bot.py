@@ -143,16 +143,13 @@ json_data = json.loads(json_str)  # Converts the string to a JSON object
 update = Update.de_json(json_data, application.bot)
 
 import json
-from flask import Flask, request
-from telegram import Update
-import asyncio
 
 @app.route("/webhook", methods=["POST"])
 def webhook():
-    json_str = request.get_data().decode("UTF-8")  # Get the raw string data
-    json_data = json.loads(json_str)  # Convert the string to a JSON object
-    update = Update.de_json(json_data, application.bot)  # Pass JSON data to Update
-    asyncio.run(application.process_update(update))  # Process the update
+    json_str = request.get_data().decode("UTF-8")  # Get the raw JSON data from the request
+    data = json.loads(json_str)  # Parse the raw string into a JSON object (dict)
+    update = Update.de_json(data, application.bot)  # Now pass the parsed data to de_json
+    asyncio.run(application.process_update(update))
     return "ok", 200
 @app.route('/')
 def home():
