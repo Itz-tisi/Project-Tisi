@@ -154,3 +154,6 @@ def webhook():
     update = Update.de_json(json_data, application.bot)  # Pass JSON data to Update
     asyncio.run(application.process_update(update))  # Process the update
     return "ok", 200
+@app.route('/')
+def home():
+    return "Bot is live!", 200
