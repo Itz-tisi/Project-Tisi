@@ -15,7 +15,7 @@ logging.basicConfig(level=logging.INFO)
 player_data = {}
 team_requests = {}
 
-# Your bot's token
+# Your bot's token and webhook URL
 TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"
 WEBHOOK_URL = "https://project-tisi.onrender.com/webhook"
 
@@ -95,7 +95,7 @@ async def button_handler(update: Update, context: CallbackContext):
     elif data.startswith("create_team"):
         player_data[chat_id]["step"] = "team_code"
         await query.edit_message_text("Send Your Team Code:")
-    
+
     elif data.startswith("join_team"):
         team_code = find_matching_team(player_data[chat_id])
         if team_code:
