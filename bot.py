@@ -137,3 +137,20 @@ def main():
 
 if __name__ == "__main__":
     main() 
+json_str = request.get_data().decode("UTF-8")
+
+json_data = json.loads(json_str)  # Converts the string to a JSON object
+update = Update.de_json(json_data, application.bot)
+
+import json
+from flask import Flask, request
+from telegram import Update
+import asyncio
+
+@app.route("/webhook", methods=["POST"])
+def webhook():
+    json_str = request.get_data().decode("UTF-8")  # Get the raw string data
+    json_data = json.loads(json_str)  # Convert the string to a JSON object
+    update = Update.de_json(json_data, application.bot)  # Pass JSON data to Update
+    asyncio.run(application.process_update(update))  # Process the update
+    return "ok", 200
