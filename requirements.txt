@@ -7,3 +7,5 @@ pytz
 python-telegram-bot
 pytube
 python-dotenv
+yt-dlp
+telegram
