@@ -4,11 +4,8 @@ from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
-load_dotenv()
-
-# Initialize the bot token from the .env file
-TOKEN = os.getenv("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo")
+# You can directly set the token here
+TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Your Bot's Token
 
 # Function to handle YouTube URL and auto-delete
 async def handle_youtube(update: Update, context):
@@ -34,6 +31,11 @@ async def start(update: Update, context):
 
 # Main function to set up the bot and start polling
 def main():
+    # Ensure the token is loaded
+    if not TOKEN:
+        print("Bot token not found. Exiting...")
+        return
+
     application = Application.builder().token(TOKEN).build()
 
     # Add the command handler
