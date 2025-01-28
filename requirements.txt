@@ -9,3 +9,4 @@ pytube
 python-dotenv
 yt-dlp
 telegram
+python-telegram-bot[webhooks]
