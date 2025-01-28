@@ -2,15 +2,17 @@ import os
 from pytube import YouTube
 from telegram import Update
 from telegram.ext import Application, CommandHandler, MessageHandler, filters
-from dotenv import load_dotenv
+from pytube.exceptions import VideoUnavailable, RegexMatchError
+import logging
 
-# You can directly set the token here
-TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"  # Your Bot's Token
+# Your Bot's Token
+TOKEN = "7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo"
 
 # Function to handle YouTube URL and auto-delete
 async def handle_youtube(update: Update, context):
     url = update.message.text
     try:
+        # Attempt to create a YouTube object
         yt = YouTube(url)
         stream = yt.streams.get_highest_resolution()
         file_path = stream.download(output_path="downloads/")  # Download video to "downloads/" folder
@@ -22,8 +24,13 @@ async def handle_youtube(update: Update, context):
         os.remove(file_path)
         print(f"Deleted file: {file_path}")
         
+    except VideoUnavailable:
+        await update.message.reply_text("Error: The video is unavailable. It might be private or removed.")
+    except RegexMatchError:
+        await update.message.reply_text("Error: The URL format is incorrect or unsupported.")
     except Exception as e:
         await update.message.reply_text(f"Error: {e}")
+        logging.error(f"Error downloading video from {url}: {e}")
 
 # Start command
 async def start(update: Update, context):
@@ -31,11 +38,6 @@ async def start(update: Update, context):
 
 # Main function to set up the bot and start polling
 def main():
-    # Ensure the token is loaded
-    if not TOKEN:
-        print("Bot token not found. Exiting...")
-        return
-
     application = Application.builder().token(TOKEN).build()
 
     # Add the command handler
