@@ -1,10 +1,17 @@
+import os
 from pytube import YouTube
 from telegram import Update
-from telegram.ext import Updater, CommandHandler, MessageHandler, Filters
-import os
+from telegram.ext import Application, CommandHandler, MessageHandler, filters
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Initialize the bot token from the .env file
+TOKEN = os.getenv("7461925686:AAHiQp1RS7YAVFVVHoWEyKgaE5wGYgO0QJo")
 
 # Function to handle YouTube URL and auto-delete
-def handle_youtube(update: Update, context):
+async def handle_youtube(update: Update, context):
     url = update.message.text
     try:
         yt = YouTube(url)
@@ -12,29 +19,31 @@ def handle_youtube(update: Update, context):
         file_path = stream.download(output_path="downloads/")  # Download video to "downloads/" folder
 
         # Send video to user
-        update.message.reply_video(video=open(file_path, 'rb'), caption=f"Downloaded: {yt.title}")
+        await update.message.reply_video(video=open(file_path, 'rb'), caption=f"Downloaded: {yt.title}")
         
         # Delete the downloaded video after sending
         os.remove(file_path)
         print(f"Deleted file: {file_path}")
         
     except Exception as e:
-        update.message.reply_text(f"Error: {e}")
+        await update.message.reply_text(f"Error: {e}")
 
 # Start command
-def start(update: Update, context):
-    update.message.reply_text("Send a YouTube URL to download the video.")
+async def start(update: Update, context):
+    await update.message.reply_text("Send a YouTube URL to download the video.")
 
-# Main function
+# Main function to set up the bot and start polling
 def main():
-    updater = Updater("YOUR_TELEGRAM_BOT_API_TOKEN", use_context=True)
-    dp = updater.dispatcher
+    application = Application.builder().token(TOKEN).build()
 
-    dp.add_handler(CommandHandler("start", start))
-    dp.add_handler(MessageHandler(Filters.text & ~Filters.command, handle_youtube))
+    # Add the command handler
+    application.add_handler(CommandHandler("start", start))
+    
+    # Add the message handler for non-command messages (YouTube URLs)
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_youtube))
 
-    updater.start_polling()
-    updater.idle()
+    # Start polling
+    application.run_polling()
 
 if __name__ == '__main__':
     main()
